@@ -25,7 +25,7 @@ SessionLocal = sessionmaker(bind=engine)
 class PDF_Metadata(Base):
     __tablename__ = 'pdfs'
 
-    pdf_id = Column(Integer, primary_key=True)  # Primary key column
+    pdf_id = Column(String, primary_key=True)  # Primary key column
     filename = Column(String)  # Column to store the filename
     upload_date = Column(DateTime)  # Column to store the upload date
     content = Column(String)  # Column to store the content of the PDF
