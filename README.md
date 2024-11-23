@@ -41,15 +41,10 @@ DATABASE_URL=sqlite:///./pdf_database.db
 1. Start the backend server:
 ```bash
 cd src
-uvicorn main:app --reload --port 8000 --host 127.0.0.1
+uvicorn main:app --reload
 ```
 
-2. Serve the frontend using either Python's built-in HTTP server or any other static file server:
-```bash
-python -m http.server 3000 --directory frontend
-```
-
-3. Open `http://localhost:3000` in your browser.
+2. Serve the frontend using Microsoft's [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) extension for Visual Studio Code.
 
 # Usage
 
