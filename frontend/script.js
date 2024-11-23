@@ -39,10 +39,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData();
             formData.append('file', currentFile);
 
-            // Upload file to backend
-            const uploadResponse = await fetch('/upload', {
+            const baseUrl = 'http://localhost:8000';  // Make sure this matches your FastAPI port
+            
+            // Update fetch configuration
+            const uploadResponse = await fetch(`${baseUrl}/upload`, {
                 method: 'POST',
-                body: formData
+                body: formData,
+                headers: {
+                    'Accept': 'application/json',
+                },
+                credentials: 'include'
             });
 
             if (!uploadResponse.ok) {
@@ -50,28 +56,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(errorData.detail || 'Failed to upload document');
             }
 
-            const { document_id, message } = await uploadResponse.json();
+            const uploadData = await uploadResponse.json();
+            
+            const chatResponse = await fetch(`${baseUrl}/chatid/${uploadData.document_id}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                },
+                credentials: 'include'
+            });
 
-            // Get chat ID for the uploaded document
-            const chatResponse = await fetch(`/GET/chatid/${document_id}`);
             if (!chatResponse.ok) {
                 throw new Error('Failed to get chat session');
             }
 
-            const { chatid } = await chatResponse.json();
+            const chatData = await chatResponse.json();
 
-            // Show success message with the document ID
+            // Show success message
             fileInfo.innerHTML = `
-                <p class="success">✅ ${message}</p>
-                <p>Document ID: ${document_id}</p>
-                <p>Chat Session ID: ${chatid}</p>
+                <p class="success">✅ Document uploaded successfully</p>
+                <p>Document ID: ${uploadData.document_id}</p>
+                <p>Chat Session ID: ${chatData.chatid}</p>
             `;
             
         } catch (error) {
             console.error('Error:', error);
-            fileInfo.innerHTML = `
-                <p class="error">❌ ${error.message}</p>
-            `;
+            if (error.message === 'Failed to fetch') {
+                fileInfo.innerHTML = `
+                    <p class="error">❌ Cannot connect to server. Please make sure the backend is running.</p>
+                `;
+            } else {
+                fileInfo.innerHTML = `
+                    <p class="error">❌ ${error.message}</p>
+                `;
+            }
         } finally {
             processBtn.disabled = false;
             processBtn.textContent = 'Process Document';
