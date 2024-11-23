@@ -32,3 +32,11 @@ class PDF_Metadata(Base):
 
 # Create all tables in the database which are defined by Base's subclasses
 Base.metadata.create_all(bind=engine)
+
+# Get the database
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
