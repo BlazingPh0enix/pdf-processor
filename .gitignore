@@ -2,3 +2,5 @@ myenv/
 __pycache__/
 .env
 pdf_database.db
+Architecture.md
+Source_Code_Documentation.md
