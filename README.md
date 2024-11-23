@@ -19,8 +19,8 @@ A web application that allows users to upload PDF documents and chat with their 
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
-cd <repository-name>
+git clone https://github.com/BlazingPh0enix/pdf-processor
+cd pdf-processor
 ```
 
 2. Create a virtual environment and install dependencies:
@@ -46,10 +46,10 @@ uvicorn main:app --reload --port 8000 --host 127.0.0.1
 
 2. Serve the frontend using either Python's built-in HTTP server or any other static file server:
 ```bash
-python -m http.server 5500 --directory frontend
+python -m http.server 3000 --directory frontend
 ```
 
-3. Open `http://localhost:5500` in your browser.
+3. Open `http://localhost:3000` in your browser.
 
 # Usage
 
