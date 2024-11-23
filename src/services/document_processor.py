@@ -1,4 +1,4 @@
-import pypdf
+import PyPDF2
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
@@ -15,16 +15,26 @@ class DocumentProcessor:
     def __init__(self):
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
         self.text_splitter = RecursiveCharacterTextSplitter()
-        self.embeddings = OpenAIEmbeddings(self.openai_api_key)
-        self.llm = ChatOpenAI(temperature=0,
-                              model="gpt-4o-mini",
-                              api_key=self.openai_api_key)
+        # Fix the embeddings initialization
+        self.embeddings = OpenAIEmbeddings(api_key=self.openai_api_key)
+        # Fix the ChatOpenAI initialization and model name
+        self.llm = ChatOpenAI(
+            temperature=0,
+            model="gpt-3.5-turbo",  # Changed from "gpt-4o-mini" to a valid model name
+            api_key=self.openai_api_key
+        )
         
-    def process_document(self, document_path):
+    def process_document(self, file_object):
         try:
-            document = pypdf.PyPDFDocument(document_path)
-            text = document.get_text()
-            return self.retrieval_qa.process_document(text)
+            # Create a PDF reader object from file object
+            pdf_reader = PyPDF2.PdfReader(file_object)
+            
+            # Extract text from all pages
+            text = ""
+            for page in pdf_reader.pages:
+                text += page.extract_text() + "\n"
+            
+            return text.strip()
         except Exception as e:
             raise Exception(f"An error occurred while processing the document: {str(e)}")
 

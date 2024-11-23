@@ -22,7 +22,7 @@ engine = create_engine(url=db_url)
 SessionLocal = sessionmaker(bind=engine)
 
 # Define the PDF class which will be mapped to the 'pdfs' table in the database
-class PDF_Metadata(Base):
+class Document(Base):
     __tablename__ = 'pdfs'
 
     pdf_id = Column(String, primary_key=True)  # Primary key column
