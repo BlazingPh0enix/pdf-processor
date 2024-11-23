@@ -8,6 +8,7 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.prompts import ChatPromptTemplate
 import os
 from dotenv import load_dotenv
+from langchain.chains import RetrievalQA  # Add this import
 
 load_dotenv()
 
@@ -20,7 +21,7 @@ class DocumentProcessor:
         # Fix the ChatOpenAI initialization and model name
         self.llm = ChatOpenAI(
             temperature=0,
-            model="gpt-3.5-turbo",  # Changed from "gpt-4o-mini" to a valid model name
+            model="gpt-4o-mini",  # Changed from "gpt-4o-mini" to a valid model name
             api_key=self.openai_api_key
         )
         
@@ -48,7 +49,7 @@ class DocumentProcessor:
 
         try:
             # Create vector store with optimized chunk size
-            texts = self.text_splitter.split_text(document_text, chunk_size=1000, chunk_overlap=200)
+            texts = self.text_splitter.split_text(document_text)
             vector_store = FAISS.from_texts(texts, self.embeddings)
             
             # Create an improved prompt template
@@ -62,27 +63,23 @@ class DocumentProcessor:
                 Answer in a clear and concise manner.
             """)
 
-            # Create retrieval chain with optimized settings
-            document_chain = create_stuff_documents_chain(
+            # Create QA chain using RetrievalQA
+            qa_chain = RetrievalQA.from_chain_type(
                 llm=self.llm,
-                prompt=prompt_template,
-            )
-
-            retrieval_chain = create_retrieval_chain(
+                chain_type="stuff",
                 retriever=vector_store.as_retriever(
                     search_type="similarity",
                     search_kwargs={"k": 3}
                 ),
-                combine_documents_chain=document_chain
+                return_source_documents=False,
+                chain_type_kwargs={
+                    "prompt": prompt_template
+                }
             )
             
-            # Generate and validate answer
-            result = retrieval_chain.invoke({
-                "question": question,
-                "context": document_text
-            })
-            
-            return result.get("answer", "Unable to generate an answer")
+            # Generate answer
+            result = qa_chain.invoke({"query": question})
+            return result.get("result", "Unable to generate an answer")
             
         except Exception as e:
             raise Exception(f"Error generating answer: {str(e)}")
