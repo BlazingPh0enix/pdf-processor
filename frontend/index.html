@@ -8,7 +8,7 @@
 </head>
 <body>
     <div class="container">
-        <div class="upload-card">
+        <div class="upload-card" id="uploadSection">
             <h1>PDF Document Upload</h1>
             <div class="upload-zone" id="dropZone">
                 <img src="https://cdn-icons-png.flaticon.com/512/337/337946.png" alt="PDF icon">
@@ -21,6 +21,23 @@
                 <p>No file selected</p>
             </div>
             <button class="process-btn" id="processBtn" disabled>Process Document</button>
+        </div>
+
+        <!-- Replace chat-card with direct chat components -->
+        <div id="chatSection" style="display: none;">
+            <div class="chat-header">
+                <h2>Chat with your Document</h2>
+                <button class="back-btn" id="backBtn"></button>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message system">
+                    Ask any question about your document!
+                </div>
+            </div>
+            <div class="chat-input-container">
+                <input type="text" id="chatInput" placeholder="Type your question here...">
+                <button id="sendBtn">Send</button>
+            </div>
         </div>
     </div>
     <script src="script.js"></script>

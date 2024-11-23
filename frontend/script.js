@@ -5,6 +5,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const processBtn = document.getElementById('processBtn');
     let currentFile = null;
 
+    const chatSection = document.getElementById('chatSection');
+    const uploadSection = document.getElementById('uploadSection');
+    const backBtn = document.getElementById('backBtn');
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const chatMessages = document.getElementById('chatMessages');
+    let currentDocumentId = null;
+    let ws = null;
+
+    // Initialize WebSocket connection
+    function initializeWebSocket(documentId) {
+        const wsUrl = `ws://127.0.0.1:8000/ws/${documentId}`;
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+            console.log('WebSocket connected');
+            addMessage('Connected to chat server', 'system');
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log('Received message:', data);
+            if (data.error) {
+                addMessage(data.error, 'system');
+            } else {
+                addMessage(data.answer, 'bot');
+            }
+        };
+
+        ws.onclose = () => {
+            console.log('WebSocket disconnected');
+            addMessage('Connection closed. Reconnecting...', 'system');
+            setTimeout(() => initializeWebSocket(documentId), 1000);
+        };
+
+        ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            addMessage('Error connecting to server', 'system');
+        };
+    }
+
     // Drag and drop handlers
     dropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -39,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData();
             formData.append('file', currentFile);
 
-            const baseUrl = 'http://localhost:8000';  // Make sure this matches your FastAPI port
+            const baseUrl = 'http://127.0.0.1:8000';  // Make sure this matches your FastAPI port
             
             // Update fetch configuration
             const uploadResponse = await fetch(`${baseUrl}/upload`, {
@@ -48,7 +89,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: {
                     'Accept': 'application/json',
                 },
-                credentials: 'include'
+                // Remove credentials if causing CORS issues
+                // credentials: 'include'
             });
 
             if (!uploadResponse.ok) {
@@ -78,6 +120,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p>Document ID: ${uploadData.document_id}</p>
                 <p>Chat Session ID: ${chatData.chatid}</p>
             `;
+
+            // After successful upload, initialize WebSocket
+            if (uploadData.document_id) {
+                currentDocumentId = uploadData.document_id;
+                initializeWebSocket(currentDocumentId);
+                uploadSection.style.display = 'none';
+                chatSection.style.display = 'block';
+            }
             
         } catch (error) {
             console.error('Error:', error);
@@ -95,6 +145,45 @@ document.addEventListener('DOMContentLoaded', () => {
             processBtn.textContent = 'Process Document';
         }
     });
+
+    // Back button handler
+    backBtn.addEventListener('click', () => {
+        if (ws) {
+            ws.close();
+            ws = null;
+        }
+        chatSection.style.display = 'none';
+        uploadSection.style.display = 'block';
+    });
+
+    // Send message handler
+    sendBtn.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+
+    async function sendMessage() {
+        const question = chatInput.value.trim();
+        if (!question || !ws) return;
+
+        // Add user message to chat
+        addMessage(question, 'user');
+        chatInput.value = '';
+
+        // Send message through WebSocket
+        ws.send(JSON.stringify({
+            document_id: currentDocumentId,
+            question: question
+        }));
+    }
+
+    function addMessage(text, type) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${type}`;
+        messageDiv.textContent = text;
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
 
     // File handling function
     function handleFiles(files) {
